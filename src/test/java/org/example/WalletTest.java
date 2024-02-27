@@ -55,12 +55,12 @@ class WalletTest {
             Wallet wallet = new Wallet("Salwa");
             // menambahkan saldo uang
             wallet.tambahUang(200000);
-            wallet.tambahUang(100000);
+            wallet.tambahUang(500);
 
             // mengecek bahwa uang bernilai > 1000 masuk ke dalam list uang lembaran
             Assertions.assertTrue(wallet.getListUangLembaran().contains(200000));
             // mengecek bahwa uang bernilai < 1000 masuk ke dalam list uang koin
-            Assertions.assertFalse(wallet.getListUangKoin().contains(100000));
+            Assertions.assertTrue(wallet.getListUangKoin().contains(500));
         }
 
         @Test
