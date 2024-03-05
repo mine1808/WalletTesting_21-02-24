@@ -1,88 +1,171 @@
 package org.example;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WalletTest {
-
-        @Test
-        void TestSetOwner(){
-            Wallet wallet = new Wallet("Salwa");
-            // Mengecek bahwa nilai owner sama seperti saat awal membuat objek
-            Assertions.assertEquals("Salwa", wallet.getOwner());
-
-            // mengubah nilai owner dengan setOwner
-            wallet.setOwner("Jasmine");
-
-            Assertions.assertAll(
-                    // mengecek bahwa nilai owner tetap ada setelah diubah
-                    () -> Assertions.assertNotNull(wallet.getOwner()),
-                    // mengecek bahwa nilai owner berhasil untuk diubah
-                    () -> Assertions.assertEquals("Jasmine", wallet.getOwner())
-            );
-        }
-
-        @Test
-        void TestTambahKartu(){
-            Wallet wallet = new Wallet("Salwa");
-            // menambahkan kartu
-            wallet.tambahKartu("MANDIRI");
-
-
-            Assertions.assertAll(
-                    // mengecek bahwa list tidak bernilai kosong
-                    () -> Assertions.assertNotNull(wallet.getListKartu()),
-                    // mengecek bahwa kartu yang ditambahkan telah masuk ke list
-                    () -> Assertions.assertTrue(wallet.getListKartu().contains("MANDIRI"))
-
-            );
-        }
-
-        @Test
-        void TestAmbilKartu(){
-            Wallet wallet = new Wallet("Salwa");
-            wallet.tambahKartu("MANDIRI");
-
-            // mengambil kartu yang ada di dalam list
-            wallet.ambilKartu("MANDIRI");
-
-            // mengecek bahwa kartu yang diambil sudah tidak ada lagi di dalam list
-            Assertions.assertFalse(wallet.getListUangKoin().contains("MANDIRI"));
-        }
-
-        @Test
-        void TestTambahUang(){
-            Wallet wallet = new Wallet("Salwa");
-            // menambahkan saldo uang
-            wallet.tambahUang(200000);
-            wallet.tambahUang(500);
-
-            // mengecek bahwa uang bernilai > 1000 masuk ke dalam list uang lembaran
-            Assertions.assertTrue(wallet.getListUangLembaran().contains(200000));
-            // mengecek bahwa uang bernilai < 1000 masuk ke dalam list uang koin
-            Assertions.assertTrue(wallet.getListUangKoin().contains(500));
-        }
-
-        @Test
-        void TestAmbilUang(){
-            Wallet wallet = new Wallet("Salwa");
-            wallet.tambahUang(200000);
-            // mengambil uang yang terdapat pada list
-            wallet.ambilUang(200000);
-
-            // mengecek bahwa uang yang diambil sudah tidak ada lagi di dalam list
-            Assertions.assertFalse(wallet.getListUangLembaran().contains(200000));
-        }
-
-        @Test
-        void TestTampilkanUang(){
-            Wallet wallet = new Wallet("Salwa");
-            // menambahkan uang
-            wallet.tambahUang(200000);
-            wallet.tambahUang(100000);
-            wallet.tambahUang(200000);
-
-            // mengecek bahwa jumlah uang yang terdapat pada wallet
-            Assertions.assertEquals(500000, wallet.tampilkanUang());
-        }
+    private Wallet wallet; // Mendeklarasikan variabel wallet yang akan digunakan dalam pengujian.
+    private final String ownerName = "Salwa Jasmine"; // Mendeklarasikan nama pemilik dompet.
+    private final String bankName = "BNI"; //  Mendeklarasikan nama bank.
+    private final String cardAccountNumber = "1234-8765-4321"; // Mendeklarasikan nomor akun kartu.
+    @BeforeAll
+    void initClass() { // Metode ini dijalankan sekali sebelum semua tes dimulai. Digunakan untuk menginisialisasi objek Wallet.
+        wallet = new Wallet(ownerName);
+        System.out.println("@BeforeAll is called");
     }
+    @BeforeEach
+    void initMethod() { // Metode ini dijalankan sebelum setiap tes. Digunakan untuk mengatur nama pemilik dompet dan menambahkan kartu ke dalam dompet.
+        wallet.setOwnerName(ownerName);
+        wallet.addCard(bankName, cardAccountNumber);
+        System.out.println("@BeforeEach is called");
+    }
+    @AfterEach
+    void cleanMethod() { // Metode ini dijalankan setelah setiap tes. Digunakan untuk menghapus semua kartu dari dompet.
+        wallet.removeAllCards();
+        System.out.println("@AfterEach is called");
+    }
+    @AfterAll
+    void cleanClass() { // Metode ini dijalankan sekali setelah semua tes selesai. Digunakan untuk membersihkan sumber daya atau melakukan tindakan bersih.
+        System.out.println("@AfterAll is called");
+    }
+    @Test
+    public void testSetDataOwner() { // Menguji metode setOwnerName untuk memastikan data pemilik dapat diatur dengan benar.
+        assertAll(
+                () ->  assertNotNull(wallet.getOwnerName()),
+                () -> assertEquals(ownerName, wallet.getOwnerName())
+        );
+    }
+    @Test
+    public void testChangeOwnerName() { // Menguji pengubahan nama pemilik dompet.
+        wallet.setOwnerName("Aaliyah");
+        assertAll(
+                () ->  assertNotNull(wallet.getOwnerName()),
+                () -> assertEquals("Aaliyah", wallet.getOwnerName())
+        );
+        wallet.setOwnerName("");
+        assertAll(
+                () ->  assertNotNull(wallet.getOwnerName()),
+                () -> assertEquals("", wallet.getOwnerName())
+        );
+    }
+    @Test
+    public void testAddCard() { // Menguji penambahan kartu ke dalam dompet.
+        Card addedCard = wallet.getCards().get(0);
+
+        // Assert
+        assertAll(
+                () -> assertEquals(1, wallet.getCards().size()),
+                () -> assertEquals(ownerName, addedCard.getOwnerName()),
+                () -> assertEquals(bankName, addedCard.getBank()),
+                () -> assertEquals(cardAccountNumber, addedCard.getAccountNumber())
+        );
+    }
+    @Test
+    public void testRemoveCard() { // Menguji penghapusan kartu dari dompet.
+        // Act
+        wallet.removeCard(cardAccountNumber);
+
+        // Assert
+        assertAll(
+                () -> assertEquals(0, wallet.getCards().size()),
+                () -> assertNull(findCardByAccountNumber(wallet))
+        );
+    }
+    private Card findCardByAccountNumber(Wallet wallet) {
+        for (Card card : wallet.getCards()) {
+            if (card.getAccountNumber().equals("1234-8765-4321")) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    @Test
+    public void testDeposit() { // Menguji metode depositCash untuk memastikan uang tunai dapat disetor dengan benar.
+        // Act & Assert: Deposit a valid amount
+        int validAmount = 5000;
+        int depositedAmount = wallet.depositCash(validAmount);
+
+        assertEquals(validAmount, depositedAmount);
+        assertEquals(1, wallet.getCashMap().get(validAmount).intValue());
+        System.out.println("Current Cash Map: " + wallet.getCashMap());
+
+
+        // Act & Assert: Deposit an invalid amount
+        int invalidAmount = 0;
+        depositedAmount = wallet.depositCash(invalidAmount);
+
+        assertEquals(0, depositedAmount);
+        assertNull(wallet.getCashMap().get(invalidAmount));
+        System.out.println("Current Cash Map: " + wallet.getCashMap());
+
+
+        // Act & Assert: Deposit using an invalid denomination
+        int invalidDenomination = 3000;
+        depositedAmount = wallet.depositCash(invalidDenomination);
+
+        assertEquals(0, depositedAmount);
+        assertNull(wallet.getCashMap().get(invalidDenomination));
+        System.out.println("Current Cash Map: " + wallet.getCashMap());
+    }
+
+    @Test
+    public void testWithdrawCash() { // Menguji metode withdrawCash untuk memastikan uang tunai dapat ditarik dengan benar.
+        int validAmount = 1000;
+        wallet.depositCash(validAmount);
+
+        // Act & Assert: Withdraw a valid amount
+        int withdrawnAmount = wallet.withdrawCash(validAmount);
+
+        assertEquals(validAmount, withdrawnAmount);
+        assertEquals(0, wallet.getCashMap().get(validAmount).intValue());
+        System.out.println("1 - Current Cash Map: " + wallet.getCashMap());
+
+
+        // Act & Assert: Withdraw an invalid amount
+        int invalidAmount = 0;
+        withdrawnAmount = wallet.withdrawCash(invalidAmount);
+
+        assertEquals(0, withdrawnAmount);
+        assertNull(wallet.getCashMap().get(invalidAmount));
+        System.out.println("2 - Current Cash Map: " + wallet.getCashMap());
+
+
+        // Act & Assert: Withdraw using an invalid denomination
+        int invalidDenomination = 3000;
+        withdrawnAmount = wallet.withdrawCash(invalidDenomination);
+
+        assertEquals(0, withdrawnAmount);
+        assertNull(wallet.getCashMap().get(invalidDenomination));
+        System.out.println("3 - Current Cash Map: " + wallet.getCashMap());
+
+
+        // Act & Assert: Withdraw from a valid but empty denomination
+        int emptyDenomination = 100000;
+        withdrawnAmount = wallet.withdrawCash(emptyDenomination);
+
+        assertEquals(0, withdrawnAmount);
+        assertNotNull(wallet.getCashMap().get(emptyDenomination));
+        System.out.println("4 - Current Cash Map: " + wallet.getCashMap());
+    }
+
+    @Test
+    public void testCalculateTotalCash() { // Menguji perhitungan total uang tunai dalam dompet.
+        Integer amount1 = 10000;
+        wallet.depositCash(amount1);
+
+        // Assert
+        assertEquals(amount1, wallet.calculateTotalCash());
+
+        // Act & Assert: Sum multiple cash
+        Integer amount2 = 20000;
+        Integer amount3 = 1000;
+        Integer amount4 = 100;
+        wallet.depositCash(amount2);
+        wallet.depositCash(amount3);
+        wallet.depositCash(amount4);
+        assertEquals(31100, wallet.calculateTotalCash());
+    }
+}
